@@ -24,6 +24,10 @@ same secure way every time.
 2. Create a **Supabase** project.
 3. Configure the pieces below, then run it.
 
+> **Deploying and testing end to end?** [`DEPLOY.md`](DEPLOY.md) is the ordered,
+> click-by-click runbook (GitHub → Supabase → Railway) with a verification
+> checklist and common snags.
+
 ### 1. Supabase dashboard (one-time)
 
 - **Authentication → Sign In / Providers → Email:** enabled, **"Confirm email"
