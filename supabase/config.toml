@@ -1,0 +1,3 @@
+# Minimal Supabase CLI config. `project_id` is just a local label; CI links to
+# the real project with `supabase link --project-ref <ref>`.
+project_id = "supabase-vibe-starter"

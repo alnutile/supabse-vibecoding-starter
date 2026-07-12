@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f package.json ] && [ ! -d node_modules ]; then (npm ci || npm install) >/dev/null 2>&1 || echo 'vibe-starter: npm install failed — run it manually to enable typecheck/lint/test.'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

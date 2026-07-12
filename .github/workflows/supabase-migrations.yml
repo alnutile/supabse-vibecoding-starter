@@ -1,0 +1,44 @@
+name: Apply Supabase migrations
+
+# Runs the SQL in supabase/migrations against the linked project whenever a
+# migration (or this workflow) changes on main. `supabase db push` only applies
+# versions not already recorded in the project, so it's safe to re-run.
+#
+# Set these in GitHub → repo Settings → Secrets and variables → Actions:
+#   Variable  SUPABASE_PROJECT_REF   your project ref (public; it's in the API URL)
+#   Secret    SUPABASE_ACCESS_TOKEN  Account → Access Tokens
+#   Secret    SUPABASE_DB_PASSWORD   Project → Settings → Database password
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - '.github/workflows/supabase-migrations.yml'
+  workflow_dispatch: {}
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail early if the project ref isn't configured
+        run: |
+          if [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "::error::Set the SUPABASE_PROJECT_REF repository variable (Settings → Secrets and variables → Actions → Variables)."
+            exit 1
+          fi
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Push migrations
+        run: supabase db push
