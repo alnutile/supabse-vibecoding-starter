@@ -1,5 +1,9 @@
 # supabase-vibe-starter
 
+> Support efforts like this by visiting my sponsor below and learn more about the Zapier SDK!
+
+🚀 [https://bit.ly/4w9EuLX ](https://bit.ly/4w9EuLX )
+
 An opinionated **GitHub template** for vibe-coding a real app with confidence.
 Start a new project from it and you get, working on day one:
 
