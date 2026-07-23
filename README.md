@@ -4,6 +4,10 @@
 
 🚀 [https://bit.ly/4w9EuLX ](https://bit.ly/4w9EuLX )
 
+📺 [Watch the Video](https://youtu.be/wP0s8BLi-ZM)
+
+📖 [Read the Substack](https://dailyaistudio.substack.com/p/vibe-coding-with-confidence)
+
 An opinionated **GitHub template** for vibe-coding a real app with confidence.
 Start a new project from it and you get, working on day one:
 
