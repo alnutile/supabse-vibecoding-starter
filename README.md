@@ -2,7 +2,7 @@
 
 > Support efforts like this by visiting my sponsor below and learn more about the Zapier SDK!
 
-🚀 [https://bit.ly/4w9EuLX ](https://bit.ly/4w9EuLX )
+🚀 [Sponsored by Zapier SDK](https://bit.ly/4w9EuLX )
 
 📺 [Watch the Video](https://youtu.be/wP0s8BLi-ZM)
 
