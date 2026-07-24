@@ -1,3 +1,19 @@
-# Minimal Supabase CLI config. `project_id` is just a local label; CI links to
-# the real project with `supabase link --project-ref <ref>`.
+# Supabase CLI config. `project_id` is a local label. Auth settings below are
+# pushed to the linked hosted project with `supabase config push`.
 project_id = "supabase-vibe-starter"
+
+[auth]
+# Open sign-up, no email verification (per the starter's design). site_url is
+# the default post-auth redirect; add the Railway URL here once it exists.
+enable_signup = true
+site_url = "https://training-video-production.up.railway.app"
+additional_redirect_urls = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://training-video-production.up.railway.app",
+]
+
+[auth.email]
+enable_signup = true
+# Magic link + password both work; no confirmation step so sign-up is instant.
+enable_confirmations = false
