@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import { Auth } from './components/Auth'
-import { Dashboard } from './components/Dashboard'
+import { AppShell } from './components/AppShell'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -23,6 +23,6 @@ export default function App() {
     return <div className="center muted">Loading…</div>
   }
 
-  // Auth gate: no session → login screen; a session → the dashboard.
-  return session ? <Dashboard session={session} /> : <Auth />
+  // Auth gate: no session → login screen; a session → the app shell (tabs).
+  return session ? <AppShell session={session} /> : <Auth />
 }

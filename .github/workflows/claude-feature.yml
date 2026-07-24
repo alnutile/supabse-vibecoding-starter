@@ -1,0 +1,110 @@
+# Build approved features with Claude Code.
+#
+# Dragging a card to "Approved for work" makes the `features` edge function open
+# an issue labeled `approved-for-work`. This workflow fires on that label, runs
+# Claude Code against a checkout, and opens a PR that references the issue (the
+# board's `sync` picks the PR up from the issue timeline). Dragging to "Approved
+# to merge" squash-merges the PR, which triggers the Railway rebuild plus
+# supabase-migrations.yml.
+#
+# Setup — ONE secret (repo → Settings → Secrets and variables → Actions):
+#   ANTHROPIC_API_KEY – an Anthropic API key. Claude Code runs the build on it.
+#
+# Guardrails: the agent works on a branch and opens a PR — it cannot push to
+# main (no direct-push step here; protect `main` with branch protection). A human
+# reviews and the board's merge lane ships it.
+
+name: Build approved feature
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  build:
+    if: github.event.label.name == 'approved-for-work'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Claude Code implements the feature
+        uses: anthropics/claude-code-action@v1
+        # The action wires up GIT auth itself (push works), but the `gh` CLI
+        # reads GH_TOKEN from the environment — without this, `gh pr create`
+        # fails silently and the branch never gets a PR.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Implement the feature described in issue #${{ github.event.issue.number }}:
+
+            Title: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            Instructions:
+            - Read CLAUDE.md first and follow the repository conventions.
+            - Work on a new branch named feature/issue-${{ github.event.issue.number }}.
+            - Run `npm install` and verify your change with `npm run typecheck`,
+              `npm run lint`, `npm test`, AND `npm run build` before finishing. If
+              your change adds or alters logic (parsing, validation, calculations),
+              add or update tests for it — tests live next to the code as
+              src/**/*.test.ts(x).
+            - If the change needs a DB migration, add the next timestamp-prefixed
+              file under supabase/migrations/ mirroring the documents shape
+              (user_id default auth.uid(), RLS on, owner-gated policies).
+              supabase-migrations.yml applies it on merge.
+            - Never put the service_role key or any secret in client code or a
+              VITE_ var. Only VITE_-prefixed env vars reach the browser.
+            - Commit, push the branch, and open a pull request whose description
+              explains the change and contains "Closes #${{ github.event.issue.number }}".
+            - Do NOT push to main. Do NOT merge the PR.
+          claude_args: |
+            --model claude-sonnet-5 --max-turns 150 --allowedTools "Bash(git:*),Bash(npm:*),Bash(gh:*),Read,Write,Edit,Glob,Grep"
+
+      # Green must mean "a PR exists", not "the agent didn't crash". Check this
+      # FIRST: if the agent finished without pushing the branch + opening a PR
+      # (e.g. it ran out of turns before committing), flag it on the issue and
+      # fail with a clear message — rather than letting the test steps below fail
+      # confusingly on a `git fetch` of a ref that was never pushed.
+      - name: Verify a PR was opened
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch="feature/issue-${{ github.event.issue.number }}"
+          pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            gh issue comment "${{ github.event.issue.number }}" --repo "$GITHUB_REPOSITORY" \
+              --body "⚠️ The build run finished without opening a PR for \`$branch\` (the agent may have run out of turns before committing) — see the [run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+            echo "::error::No open PR for $branch — the agent finished without gh pr create succeeding."
+            exit 1
+          fi
+          echo "PR #$pr is open for $branch."
+
+      # PRs opened with the workflow's GITHUB_TOKEN don't trigger pull_request
+      # workflows (GitHub anti-recursion), so CI will NOT run on the bot's PR —
+      # run the same checks here, deterministically, against the pushed branch.
+      # Red here = don't merge.
+      - name: Test the built branch
+        run: |
+          branch="feature/issue-${{ github.event.issue.number }}"
+          git fetch origin "$branch"
+          git checkout "$branch"
+          npm ci
+          npm run typecheck
+          npm run lint
+          npm test
+          npm run build

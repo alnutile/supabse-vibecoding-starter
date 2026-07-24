@@ -17,3 +17,8 @@ additional_redirect_urls = [
 enable_signup = true
 # Magic link + password both work; no confirmation step so sign-up is instant.
 enable_confirmations = false
+
+# The Features board's GitHub brain (approve / sync / merge). verify_jwt so the
+# gateway validates the caller; the function itself re-checks profiles.is_admin.
+[functions.features]
+verify_jwt = true
