@@ -3,6 +3,7 @@ import type { ChangeEvent, DragEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, DOCUMENTS_BUCKET } from '../lib/supabase'
 import { formatBytes } from '../lib/format'
+import { splitPinned } from '../lib/documents'
 
 type Doc = {
   id: string
@@ -11,6 +12,7 @@ type Doc = {
   mime_type: string | null
   size_bytes: number | null
   notes: string | null
+  pinned: boolean
   created_at: string
 }
 
@@ -35,6 +37,13 @@ const FileIcon = ({ color, size = 34 }: { color: string; size?: number }) => (
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <path d="M14 2v6h6" />
     <path d="M8 13h8M8 17h5" />
+  </svg>
+)
+
+const PinIcon = ({ filled = false, size = 16 }: { filled?: boolean; size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z" />
+    {!filled && <circle cx="12" cy="9" r="2.5" />}
   </svg>
 )
 
@@ -132,6 +141,13 @@ export function DocumentsPage({ session }: { session: Session }) {
     }
   }
 
+  async function togglePin(doc: Doc) {
+    setError(null)
+    const { error } = await supabase.from('documents').update({ pinned: !doc.pinned }).eq('id', doc.id)
+    if (error) setError(error.message)
+    else await load()
+  }
+
   async function remove(doc: Doc) {
     setError(null)
     const { error: sErr } = await supabase.storage.from(DOCUMENTS_BUCKET).remove([doc.storage_path])
@@ -153,7 +169,81 @@ export function DocumentsPage({ session }: { session: Session }) {
     )
   }, [docs, query])
 
+  const { pinned: pinnedDocs, rest: restDocs } = useMemo(() => splitPinned(filtered), [filtered])
+
   const openDoc = openId ? docs.find((d) => d.id === openId) ?? null : null
+
+  function renderDocs(list: Doc[]) {
+    if (view === 'grid') {
+      return (
+        <div className="doc-grid">
+          {list.map((doc) => {
+            const st = fileStyle(extOf(doc.name))
+            return (
+              <div key={doc.id} className={`doc-card${doc.pinned ? ' pinned' : ''}`} onClick={() => setOpenId(doc.id)}>
+                <div className="doc-thumb" style={{ background: st.grad }}>
+                  <div className="doc-thumb-sheen" />
+                  <div className="doc-badge" style={{ background: st.badge }}>{extOf(doc.name).toUpperCase()}</div>
+                  <FileIcon color={st.icon} />
+                  <div className="doc-overlay">
+                    <button className="btn primary" onClick={(e) => { e.stopPropagation(); download(doc) }}>View</button>
+                  </div>
+                </div>
+                <div className="doc-meta">
+                  <div className="txt">
+                    <div className="doc-name" title={doc.name}>{doc.name}</div>
+                    <div className="doc-sub">{formatBytes(doc.size_bytes)} · {new Date(doc.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <button
+                    className={`icon-btn${doc.pinned ? ' pin-active' : ''}`}
+                    title={doc.pinned ? 'Unpin' : 'Pin to top'}
+                    onClick={(e) => { e.stopPropagation(); togglePin(doc) }}
+                  >
+                    <PinIcon filled={doc.pinned} />
+                  </button>
+                  <button className="icon-btn" title="Delete" onClick={(e) => { e.stopPropagation(); remove(doc) }}>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )
+    }
+    return (
+      <div className="doc-listing">
+        {list.map((doc) => {
+          const st = fileStyle(extOf(doc.name))
+          return (
+            <div key={doc.id} className={`doc-row${doc.pinned ? ' pinned' : ''}`} onClick={() => setOpenId(doc.id)}>
+              <div className="thumb-sm" style={{ background: st.grad }}>
+                <FileIcon color={st.icon} size={22} />
+              </div>
+              <div className="txt" style={{ flex: 1, minWidth: 0 }}>
+                <div className="doc-name" title={doc.name}>{doc.name}</div>
+                <div className="doc-sub">{doc.mime_type ?? 'file'} · {formatBytes(doc.size_bytes)} · {new Date(doc.created_at).toLocaleString()}</div>
+              </div>
+              <button
+                className={`icon-btn${doc.pinned ? ' pin-active' : ''}`}
+                title={doc.pinned ? 'Unpin' : 'Pin to top'}
+                onClick={(e) => { e.stopPropagation(); togglePin(doc) }}
+              >
+                <PinIcon filled={doc.pinned} />
+              </button>
+              <button className="icon-btn" title="Delete" onClick={(e) => { e.stopPropagation(); remove(doc) }}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
+                </svg>
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <div className="page">
@@ -201,64 +291,33 @@ export function DocumentsPage({ session }: { session: Session }) {
 
         {error && <p className="error">{error}</p>}
 
-        <div className="section-label">{query ? `${filtered.length} result${filtered.length === 1 ? '' : 's'}` : 'All documents'}</div>
-
         {filtered.length === 0 ? (
-          <div className="empty-state">
-            <div className="big">{query ? `No documents match “${query}”` : 'No documents yet'}</div>
-            <div style={{ marginTop: 6, fontSize: 14 }}>{query ? 'Try a different name or file type.' : 'Upload one to prove storage + realtime are working.'}</div>
-          </div>
-        ) : view === 'grid' ? (
-          <div className="doc-grid">
-            {filtered.map((doc) => {
-              const st = fileStyle(extOf(doc.name))
-              return (
-                <div key={doc.id} className="doc-card" onClick={() => setOpenId(doc.id)}>
-                  <div className="doc-thumb" style={{ background: st.grad }}>
-                    <div className="doc-thumb-sheen" />
-                    <div className="doc-badge" style={{ background: st.badge }}>{extOf(doc.name).toUpperCase()}</div>
-                    <FileIcon color={st.icon} />
-                    <div className="doc-overlay">
-                      <button className="btn primary" onClick={(e) => { e.stopPropagation(); download(doc) }}>View</button>
-                    </div>
-                  </div>
-                  <div className="doc-meta">
-                    <div className="txt">
-                      <div className="doc-name" title={doc.name}>{doc.name}</div>
-                      <div className="doc-sub">{formatBytes(doc.size_bytes)} · {new Date(doc.created_at).toLocaleDateString()}</div>
-                    </div>
-                    <button className="icon-btn" title="Delete" onClick={(e) => { e.stopPropagation(); remove(doc) }}>
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <>
+            <div className="section-label">{query ? '0 results' : 'All documents'}</div>
+            <div className="empty-state">
+              <div className="big">{query ? `No documents match “${query}”` : 'No documents yet'}</div>
+              <div style={{ marginTop: 6, fontSize: 14 }}>{query ? 'Try a different name or file type.' : 'Upload one to prove storage + realtime are working.'}</div>
+            </div>
+          </>
         ) : (
-          <div className="doc-listing">
-            {filtered.map((doc) => {
-              const st = fileStyle(extOf(doc.name))
-              return (
-                <div key={doc.id} className="doc-row" onClick={() => setOpenId(doc.id)}>
-                  <div className="thumb-sm" style={{ background: st.grad }}>
-                    <FileIcon color={st.icon} size={22} />
-                  </div>
-                  <div className="txt" style={{ flex: 1, minWidth: 0 }}>
-                    <div className="doc-name" title={doc.name}>{doc.name}</div>
-                    <div className="doc-sub">{doc.mime_type ?? 'file'} · {formatBytes(doc.size_bytes)} · {new Date(doc.created_at).toLocaleString()}</div>
-                  </div>
-                  <button className="icon-btn" title="Delete" onClick={(e) => { e.stopPropagation(); remove(doc) }}>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" />
-                    </svg>
-                  </button>
+          <>
+            {pinnedDocs.length > 0 && (
+              <>
+                <div className="section-label pin-section-label">
+                  <PinIcon filled size={12} /> Pinned
                 </div>
-              )
-            })}
-          </div>
+                {renderDocs(pinnedDocs)}
+              </>
+            )}
+            {(restDocs.length > 0 || pinnedDocs.length === 0) && (
+              <>
+                <div className="section-label" style={{ marginTop: pinnedDocs.length > 0 ? 24 : 0 }}>
+                  {pinnedDocs.length > 0 ? 'Other documents' : query ? `${filtered.length} result${filtered.length === 1 ? '' : 's'}` : 'All documents'}
+                </div>
+                {renderDocs(restDocs)}
+              </>
+            )}
+          </>
         )}
       </div>
 
@@ -299,6 +358,10 @@ export function DocumentsPage({ session }: { session: Session }) {
                     <button className="btn row" onClick={() => { setEditing(true); setDraftName(openDoc.name); setDraftNotes(openDoc.notes ?? '') }}>
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
                       Edit
+                    </button>
+                    <button className={`btn row${openDoc.pinned ? ' pin-active' : ''}`} onClick={() => togglePin(openDoc)}>
+                      <PinIcon filled={openDoc.pinned} size={15} />
+                      {openDoc.pinned ? 'Unpin' : 'Pin to top'}
                     </button>
                     <button className="btn danger row" style={{ marginLeft: 'auto' }} onClick={() => remove(openDoc)}>
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6" /></svg>
