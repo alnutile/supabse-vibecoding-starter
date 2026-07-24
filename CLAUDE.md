@@ -55,6 +55,13 @@ the phased method and the copy-paste patterns in the skill:
   non-negotiables and the Definition of Done.
 - `.claude/skills/vibe-coding-with-confidence/references/railway.md` — deploy.
 
+Want the app to **build its own features** — anyone files an idea, an admin
+approves, an AI coding agent opens a PR, and a merge deploys? That whole
+"idea → shipped code" pipeline is the **`ai-feature-pipeline`** skill
+(`.claude/skills/ai-feature-pipeline/`): concept + security model + the GitHub
+flow + a build-spec adapted to this starter, with the real production source as
+reference. It's a capstone (needs real accounts, an admin role, and merge-deploys).
+
 New user-data table? Copy the `documents` migration shape: `user_id` default
 `auth.uid()`, RLS ON, four owner-gated policies, `updated_at` trigger, add to the
 realtime publication if the UI should live-update.

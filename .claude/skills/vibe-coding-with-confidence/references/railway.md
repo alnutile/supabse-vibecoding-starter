@@ -35,6 +35,23 @@ Git wizard — the AI can do most of the Git steps.
 
 Also add a `.nvmrc` so local + host agree on the Node version.
 
+`vite.config.ts` — **allow the Railway host on the preview server.** `npm start`
+runs `vite preview`, whose host-check returns **403 "This host is not allowed"**
+for any `Host` it doesn't recognise — which is every Railway domain by default,
+so a fresh deploy 403s on first load *even though the build is green*:
+
+```ts
+export default defineConfig({
+  plugins: [react()],
+  preview: { allowedHosts: ['.up.railway.app'] },
+  // ...rest of config
+})
+```
+
+The leading dot allows the generated `*.up.railway.app` domain for any project
+spun from this template — no per-project edit. Add a custom domain to the list
+if you map one.
+
 ## First-time setup (click-by-click)
 
 1. **Create the GitHub repo and push** (first commit made):
