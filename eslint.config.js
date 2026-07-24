@@ -6,8 +6,9 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   // `.claude/` holds skills + their reference source (copied-in examples that
-  // aren't part of this app's build) — don't lint them.
-  { ignores: ['dist', '.claude/**'] },
+  // aren't part of this app's build). `supabase/functions` is Deno (esm.sh
+  // imports, Deno globals) with its own runtime — neither is browser lint.
+  { ignores: ['dist', '.claude/**', 'supabase/functions/**'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
