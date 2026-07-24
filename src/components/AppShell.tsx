@@ -40,7 +40,7 @@ export function AppShell({ session }: { session: Session }) {
       <nav className="nav">
         <div className="brand">
           <span className="brand-mark" aria-hidden />
-          SupaNet
+          VibeCode
         </div>
         <div className="nav-tabs">
           <a className={`tab${tab === 'docs' ? ' active' : ''}`} href="/" onClick={(e) => go('docs', e)}>
