@@ -23,6 +23,7 @@ on:
     branches: [main]
     paths-ignore:
       - 'README.md'
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
 
 concurrency:
   group: update-readme
