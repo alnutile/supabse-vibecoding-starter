@@ -91,22 +91,6 @@ GitHub repo whose merges deploy.
   instant it opens. The UI must warn before approving; screenshot signed-URLs must
   be short-lived.
 
-## Deploy gotcha: Vite preview + Railway host-check
-
-`npm start` serves the production build with `vite preview`, whose host-check
-returns **403 "This host is not allowed"** for any `Host` it doesn't recognise —
-and that is every Railway domain by default, so a fresh deploy 403s on first
-load even though the build is green. The fix lives in `vite.config.ts`:
-
-```ts
-preview: { allowedHosts: ['.up.railway.app'] }
-```
-
-The leading dot allows the generated `*.up.railway.app` domain for **any**
-project spun from this template — no per-project edit. Add a custom domain to
-the list if you map one. Keep this in `vite.config.ts` so every feature this
-pipeline ships (merge = deploy) lands live instead of 403-ing.
-
 ## Definition of done
 
 - [ ] A non-admin can file an idea but **cannot** move a card (verified as a second user).
