@@ -88,6 +88,9 @@ body {
   place-items: center;
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+.icon-btn.pin-active { color: var(--amber); }
+.icon-btn.pin-active:hover { background: var(--amber-bg); }
+.btn.row.pin-active { color: var(--amber-ink); border-color: var(--amber-border); background: var(--amber-bg); }
 
 .link { background: none; border: none; color: var(--green); font-size: 13px; cursor: pointer; padding: 4px; }
 .link.danger { color: var(--danger); }
@@ -213,11 +216,13 @@ body {
 .dropzone .hint { font-family: var(--font-mono); font-weight: 400; font-size: 12px; letter-spacing: 0.02em; color: var(--muted-2); }
 
 .section-label { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-2); margin: 0 2px 14px; }
+.section-label.pin-section-label { display: flex; align-items: center; gap: 6px; color: var(--amber); }
 
 .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
 .doc-listing { display: flex; flex-direction: column; gap: 10px; }
 
 .doc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 1px 2px rgba(14, 31, 24, 0.04); transition: box-shadow 0.18s, transform 0.18s; cursor: pointer; animation: cardIn 0.35s ease both; }
+.doc-card.pinned, .doc-row.pinned { border-color: var(--amber-border); }
 .doc-card:hover { box-shadow: 0 8px 24px rgba(14, 31, 24, 0.1); transform: translateY(-1px); }
 .doc-thumb { position: relative; height: 150px; display: flex; align-items: center; justify-content: center; }
 .doc-thumb-sheen { position: absolute; top: 0; left: 0; right: 0; height: 30%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent); }
