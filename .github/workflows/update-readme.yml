@@ -1,0 +1,89 @@
+# Keep README.md current automatically.
+#
+# On every push to main (i.e. every merge), Claude Code reads the repo and
+# refreshes README.md to reflect the current feature set, then commits it back
+# to main directly (no PR).
+#
+# NOT creating a cyclical loop — four independent guards, any one is enough:
+#   1. `paths-ignore: README.md` — the bot's commit only touches README.md, so
+#      that push does not match this trigger.
+#   2. The commit message carries `[skip ci]` — GitHub skips ALL workflows for it.
+#   3. The `if:` below bails out if a run ever fires on our own commit.
+#   4. Pushes made with the built-in GITHUB_TOKEN do not recursively trigger
+#      workflows (GitHub anti-recursion) — so even without 1–3 it wouldn't loop.
+#
+# Setup: reuses the ANTHROPIC_API_KEY Actions secret (same one the feature
+# pipeline uses). Requires main to be pushable by Actions (no branch protection
+# blocking it) — this is intentionally a direct-to-main, no-PR workflow.
+
+name: Auto-update README
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+
+concurrency:
+  group: update-readme
+  cancel-in-progress: true
+
+jobs:
+  update-readme:
+    if: >-
+      ${{ !contains(github.event.head_commit.message, '[skip ci]')
+      && !startsWith(github.event.head_commit.message, 'docs: auto-update README') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code refreshes the README
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Refresh README.md so it clearly and attractively documents THIS
+            project's CURRENT features. This runs on every merge to main, so the
+            README should always match what the code actually does today.
+
+            How to work:
+            - Read CLAUDE.md, package.json, index.html, src/ (components + lib),
+              supabase/migrations/, supabase/functions/, and .claude/skills/ to
+              learn the real, current feature set and the app's brand/name.
+            - Rewrite/refresh README.md to reflect it — e.g. Supabase auth +
+              per-user data (RLS) + realtime + storage, the tabbed app (Documents
+              + Feature requests), the AI Feature Pipeline (idea → PR → merge =
+              deploy board), document pinning, and any evals / AI-quality work
+              that is present in the code. Add newly-shipped features; drop
+              anything no longer in the code.
+            - Make it VISUAL and scannable: a one-line tagline, a row of
+              shields.io badges (e.g. stack: Vite/React/TypeScript/Supabase,
+              deploy: Railway), a "Features" table, and a GitHub-rendered
+              ```mermaid``` diagram of the self-building idea→shipped pipeline.
+              Keep a concise "Getting started" consistent with DEPLOY.md.
+            - IMPORTANT: edit ONLY README.md. Do not modify any other file, do
+              not run git or gh, and do not invent features that aren't in the
+              code.
+          claude_args: |
+            --model claude-sonnet-5 --max-turns 40 --allowedTools "Read,Edit,Write,Glob,Grep"
+
+      - name: Commit README if it changed
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "README unchanged — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          # [skip ci] + the paths-ignore above are the anti-cycle guards.
+          git commit -m "docs: auto-update README [skip ci]"
+          git push origin HEAD:main
