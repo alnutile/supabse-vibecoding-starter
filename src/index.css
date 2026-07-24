@@ -1,29 +1,31 @@
-/* Design system — Supabase-green, from design-guide/version-001.html.
-   Schibsted Grotesk (UI) + JetBrains Mono (labels/meta). Plain CSS, no framework. */
+/* Design system — Mytheme (icy blue / vivid blue+cyan / emerald), from the
+   issue #4 brand guide. Schibsted Grotesk (UI) + JetBrains Mono (labels/meta).
+   Plain CSS, no framework. */
 :root {
-  --bg: #fbfbf9;
-  --surface: #ffffff;
-  --surface-2: #f6f7f4;
-  --surface-green: #eaf7f0;
-  --ink: #11221c;
-  --ink-2: #0e1f18;
-  --muted: #5b665f;
-  --muted-2: #8a938c;
-  --faint: #a6ada5;
-  --border: #e6e8e2;
-  --border-green: #c7e7d6;
-  --green: #15795b;
-  --green-bright: #3ecf8e;
-  --on-green: #eaf2ee;
-  --danger: #c0392b;
-  --danger-bg: #fbecea;
-  --danger-border: #f0dada;
-  --amber: #b26b00;
-  --amber-bg: #fbf1e0;
-  --amber-border: #f0dfbf;
+  --bg: #edfbff;
+  --surface: #ddf2ff;
+  --surface-2: #cee9fd;
+  --surface-green: #afd7fd;
+  --ink: #00182a;
+  --ink-2: #000d18;
+  --muted: #49677d;
+  --muted-2: #9bb1be;
+  --faint: #c4d6df;
+  --border: #cee9fd;
+  --border-green: #90c5fe;
+  --green: #0071ff;
+  --green-bright: #00c6db;
+  --on-green: #f3faff;
+  --danger: #ff0000;
+  --danger-bg: #fff6f4;
+  --danger-border: #ffc5c3;
+  --amber: #ffa200;
+  --amber-ink: #221300;
+  --amber-bg: #f0eed9;
+  --amber-border: #f5d798;
   --radius: 12px;
   --radius-lg: 16px;
-  --focus: 0 0 0 4px rgba(62, 207, 142, 0.18);
+  --focus: 0 0 0 4px rgba(0, 198, 219, 0.18);
   --font-sans: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   color-scheme: light;
@@ -272,9 +274,9 @@ body {
 .chip.plain { border: none; background: transparent; color: var(--muted-2); padding: 0; }
 .chip.pr-merged, .chip.pr-open { color: var(--green); background: var(--surface-green); border-color: var(--border-green); }
 .chip.pr-closed { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-border); }
-.chip.building { color: var(--amber); background: var(--amber-bg); border-color: var(--amber-border); }
+.chip.building { color: var(--amber-ink); background: var(--amber-bg); border-color: var(--amber-border); }
 
-.warn-box { background: var(--amber-bg); border: 1px solid var(--amber-border); color: #7a4a00; border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin: 14px 0; }
+.warn-box { background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber-ink); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin: 14px 0; }
 
 @media (max-width: 900px) {
   .board { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 84%; overflow-x: auto; }

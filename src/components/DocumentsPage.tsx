@@ -14,15 +14,15 @@ type Doc = {
   created_at: string
 }
 
-// Thumbnail palette per file kind (from the design guide's green tints).
+// Thumbnail palette per file kind (from the design guide's brand tints).
 function fileStyle(ext: string): { grad: string; icon: string; badge: string } {
   const e = ext.toLowerCase()
-  const green = { grad: 'linear-gradient(150deg, #EAF7F0, #D6EFE0)', icon: '#15795B', badge: '#15795B' }
-  const dark = { grad: 'linear-gradient(150deg, #E4F5EC, #CDEBD9)', icon: '#0E1F18', badge: '#0E1F18' }
-  const bright = { grad: 'linear-gradient(150deg, #DFF4E9, #BDE7CE)', icon: '#15795B', badge: '#3ECF8E' }
+  const blue = { grad: 'linear-gradient(150deg, #EDFBFF, #CEE9FD)', icon: '#0071FF', badge: '#0071FF' }
+  const dark = { grad: 'linear-gradient(150deg, #E3EEF5, #CEE9FD)', icon: '#00182A', badge: '#00182A' }
+  const bright = { grad: 'linear-gradient(150deg, #E7FBEF, #C9F2D9)', icon: '#00B854', badge: '#00B854' }
   if (['xls', 'xlsx', 'csv'].includes(e)) return bright
   if (['ppt', 'pptx', 'zip', 'key'].includes(e)) return dark
-  return green
+  return blue
 }
 
 const extOf = (name: string) => {
@@ -169,7 +169,7 @@ export function DocumentsPage({ session }: { session: Session }) {
 
         <div className="toolbar">
           <div className="search">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8A938C" strokeWidth="2" strokeLinecap="round">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#9BB1BE" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="7" />
               <path d="M21 21l-3.5-3.5" />
             </svg>
