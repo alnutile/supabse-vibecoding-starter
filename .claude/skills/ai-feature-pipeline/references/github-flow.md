@@ -61,6 +61,15 @@ Key wiring, learned the hard way:
   > but the `gh` CLI (`gh pr create`) reads `GH_TOKEN` from the environment. Without
   > it, `gh pr create` fails silently and the branch never gets a PR.
 
+- **Allow Actions to create PRs** (billing-agnostic; the #1 "it built but no PR
+  showed up" cause). Repo → *Settings → Actions → General → Workflow permissions →
+  "Allow GitHub Actions to create and approve pull requests"* is **off by default**.
+  With it off, the workflow pushes `feature/issue-<n>` successfully but `gh pr
+  create` returns **403 "GitHub Actions is not permitted to create or approve pull
+  requests"** — so the branch exists, no PR opens, and the verify step (below) fails.
+  Enable once with `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow
+  -F can_approve_pull_request_reviews=true`.
+
 - **The prompt tells the agent the rules**: read `CLAUDE.md` first, work on
   `feature/issue-<n>`, run `npm install` then `npm run build` **and** `npm test`
   (add tests if it changed logic), add a numbered migration if the schema changes,

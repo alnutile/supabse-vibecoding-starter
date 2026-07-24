@@ -16,7 +16,8 @@ first end-to-end test. 😄
 - The base starter works (auth + `documents` + RLS + realtime + storage).
 - The repo is on GitHub and **merges to `main` deploy** (Railway is wired). Turn on
   **branch protection for `main`** (require a PR; no direct pushes).
-- You can set **edge-function secrets** and **GitHub Actions secrets**.
+- You can set **edge-function secrets** and **GitHub Actions secrets**, and can
+  change repo **Actions settings** (see §6 — Actions must be allowed to open PRs).
 - Decide who is an admin. This spec adds a minimal `profiles.is_admin` (first
   signup = admin). If your project already has roles, use those instead and skip §1a.
 
@@ -451,6 +452,17 @@ supabase secrets set GITHUB_REPO=<owner>/<repo>
 #   OPEN_ROUTER_KEY = sk-or-...   (Claude Code runs on OpenRouter billing)
 ```
 
+**Let Actions open the PR (easy to miss):** enable **repo → Settings → Actions →
+General → Workflow permissions → "Allow GitHub Actions to create and approve pull
+requests."** It is **off by default**, and without it the workflow *pushes the
+branch fine* (job-level `contents: write`) but `gh pr create` gets a **403** — so
+the build looks "done," no PR ever appears, and "Verify a PR was opened" fails on
+a branch that exists. Enable it once:
+```bash
+gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow \
+  -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true
+```
+
 **Branch protection:** protect `main` (require a PR, block direct pushes) so the
 agent can never merge itself.
 
@@ -462,7 +474,8 @@ agent can never merge itself.
 - [ ] As the admin: drag an idea to **Approved for work** → a GitHub issue opens
       with the `approved-for-work` label and the public-repo warning fired first.
 - [ ] The workflow runs, builds the feature, opens a PR; the card shows a **PR
-      badge** (via realtime, no reload).
+      badge** (via realtime, no reload). If the branch pushes but no PR opens,
+      Actions aren't allowed to create PRs — see §6.
 - [ ] The bot's PR ran `typecheck`/`lint`/`test`/`build` green on its branch.
 - [ ] Drag to **Approved to merge** → the PR squash-merges, deploy runs, card →
       **Shipped**.
