@@ -41,4 +41,9 @@ jobs:
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Push migrations
-        run: supabase db push
+        # --include-all applies any migration missing on the remote even if its
+        # timestamp predates the last-applied one. Parallel feature branches (the
+        # AI pipeline opens several) produce interleaved timestamps, so without
+        # this a branch whose migration sorts "before" an already-applied one
+        # fails with "Found local migration files to be inserted before…".
+        run: supabase db push --include-all
