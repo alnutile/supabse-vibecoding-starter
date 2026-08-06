@@ -49,3 +49,6 @@ jobs:
 
       - name: Deploy run-eval
         run: supabase functions deploy run-eval --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Deploy features
+        run: supabase functions deploy features --project-ref "$SUPABASE_PROJECT_REF"
