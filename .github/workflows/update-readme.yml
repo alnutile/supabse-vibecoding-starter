@@ -55,6 +55,9 @@ jobs:
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Refresh README with Claude Code
+        # Documentation automation must not block a tested production deploy if
+        # the optional Anthropic credential is missing, expired, or over quota.
+        continue-on-error: true
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PROMPT: |
